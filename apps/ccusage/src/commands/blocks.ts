@@ -391,8 +391,11 @@ export const blocksCommand = define({
 					tableAligns.push('right');
 				}
 
-				tableHeaders.push('Cost');
-				tableAligns.push('right');
+				// Add Cost column if not hidden
+				if (ctx.values.noDisplayCost !== true) {
+					tableHeaders.push('Cost');
+					tableAligns.push('right');
+				}
 
 				const table = new ResponsiveTable({
 					head: tableHeaders,
@@ -420,7 +423,9 @@ export const blocksCommand = define({
 						if (actualTokenLimit != null && actualTokenLimit > 0) {
 							gapRow.push(pc.gray('-'));
 						}
-						gapRow.push(pc.gray('-'));
+						if (ctx.values.noDisplayCost !== true) {
+							gapRow.push(pc.gray('-'));
+						}
 						table.push(gapRow);
 					}
 					else {
@@ -442,7 +447,9 @@ export const blocksCommand = define({
 							row.push(percentage > 100 ? pc.red(percentText) : percentText);
 						}
 
-						row.push(formatCurrency(block.costUSD));
+						if (ctx.values.noDisplayCost !== true) {
+							row.push(formatCurrency(block.costUSD));
+						}
 						table.push(row);
 
 						// Add REMAINING and PROJECTED rows for active blocks
@@ -467,8 +474,11 @@ export const blocksCommand = define({
 									'',
 									remainingText,
 									remainingPercentText,
-									'', // No cost for remaining - it's about token limit, not cost
 								];
+								// No cost for remaining - it's about token limit, not cost
+								if (ctx.values.noDisplayCost !== true) {
+									remainingRow.push('');
+								}
 								table.push(remainingRow);
 							}
 
@@ -494,7 +504,9 @@ export const blocksCommand = define({
 									projectedRow.push(percentText);
 								}
 
-								projectedRow.push(formatCurrency(projection.totalCost));
+								if (ctx.values.noDisplayCost !== true) {
+									projectedRow.push(formatCurrency(projection.totalCost));
+								}
 								table.push(projectedRow);
 							}
 						}

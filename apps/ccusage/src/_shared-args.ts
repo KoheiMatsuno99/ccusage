@@ -108,6 +108,11 @@ export const sharedArgs = {
 		description: 'Force compact mode for narrow displays (better for screenshots)',
 		default: false,
 	},
+	noDisplayCost: {
+		type: 'boolean',
+		description: 'Do not display cost information',
+		default: false,
+	},
 } as const satisfies Args;
 
 /**

@@ -113,6 +113,7 @@ export const weeklyCommand = define({
 				firstColumnName: 'Week',
 				dateFormatter: (dateStr: string) => formatDateCompact(dateStr, mergedOptions.timezone, mergedOptions.locale ?? undefined),
 				forceCompact: ctx.values.compact,
+				noDisplayCost: ctx.values.noDisplayCost,
 			};
 			const table = createUsageReportTable(tableConfig);
 
@@ -126,7 +127,7 @@ export const weeklyCommand = define({
 					cacheReadTokens: data.cacheReadTokens,
 					totalCost: data.totalCost,
 					modelsUsed: data.modelsUsed,
-				});
+				}, undefined, ctx.values.noDisplayCost);
 				table.push(row);
 
 				// Add model breakdown rows if flag is set
@@ -136,7 +137,8 @@ export const weeklyCommand = define({
 			}
 
 			// Add empty row for visual separation before totals
-			addEmptySeparatorRow(table, 8);
+			const columnCount = ctx.values.noDisplayCost ? 7 : 8;
+			addEmptySeparatorRow(table, columnCount);
 
 			// Add totals
 			const totalsRow = formatTotalsRow({
@@ -145,7 +147,7 @@ export const weeklyCommand = define({
 				cacheCreationTokens: totals.cacheCreationTokens,
 				cacheReadTokens: totals.cacheReadTokens,
 				totalCost: totals.totalCost,
-			});
+			}, ctx.values.noDisplayCost);
 			table.push(totalsRow);
 
 			log(table.toString());

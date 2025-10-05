@@ -28,6 +28,7 @@ export type TableOptions = {
 	compactColAligns?: TableCellAlign[];
 	compactThreshold?: number;
 	forceCompact?: boolean;
+	noDisplayCost?: boolean;
 	logger?: (message: string) => void;
 };
 
@@ -421,6 +422,8 @@ export type UsageReportConfig = {
 	dateFormatter?: (dateStr: string) => string;
 	/** Force compact mode regardless of terminal width */
 	forceCompact?: boolean;
+	/** Whether to hide cost columns */
+	noDisplayCost?: boolean;
 };
 
 /**
@@ -449,13 +452,11 @@ export function createUsageReportTable(config: UsageReportConfig): ResponsiveTab
 		'Cache Create',
 		'Cache Read',
 		'Total Tokens',
-		'Cost (USD)',
 	];
 
 	const baseAligns: TableCellAlign[] = [
 		'left',
 		'left',
-		'right',
 		'right',
 		'right',
 		'right',
@@ -468,7 +469,6 @@ export function createUsageReportTable(config: UsageReportConfig): ResponsiveTab
 		'Models',
 		'Input',
 		'Output',
-		'Cost (USD)',
 	];
 
 	const compactAligns: TableCellAlign[] = [
@@ -476,8 +476,15 @@ export function createUsageReportTable(config: UsageReportConfig): ResponsiveTab
 		'left',
 		'right',
 		'right',
-		'right',
 	];
+
+	// Add Cost column if not hidden
+	if (config.noDisplayCost !== true) {
+		baseHeaders.push('Cost (USD)');
+		baseAligns.push('right');
+		compactHeaders.push('Cost (USD)');
+		compactAligns.push('right');
+	}
 
 	// Add Last Activity column for session reports
 	if (config.includeLastActivity ?? false) {
@@ -496,6 +503,7 @@ export function createUsageReportTable(config: UsageReportConfig): ResponsiveTab
 		compactColAligns: compactAligns,
 		compactThreshold: 100,
 		forceCompact: config.forceCompact,
+		noDisplayCost: config.noDisplayCost,
 	});
 }
 
@@ -504,15 +512,18 @@ export function createUsageReportTable(config: UsageReportConfig): ResponsiveTab
  * @param firstColumnValue - Value for the first column (date, month, etc.)
  * @param data - Usage data containing tokens and cost information
  * @param lastActivity - Optional last activity value (for session reports)
+ * @param noDisplayCost - Whether to omit the cost column
  * @returns Formatted table row
  */
 export function formatUsageDataRow(
 	firstColumnValue: string,
 	data: UsageData,
 	lastActivity?: string,
+	noDisplayCost?: boolean,
 ): (string | number)[] {
 	const totalTokens = data.inputTokens + data.outputTokens + data.cacheCreationTokens + data.cacheReadTokens;
 
+	const totalCost = formatCurrency(data.totalCost);
 	const row: (string | number)[] = [
 		firstColumnValue,
 		data.modelsUsed != null ? formatModelsDisplayMultiline(data.modelsUsed) : '',
@@ -521,8 +532,11 @@ export function formatUsageDataRow(
 		formatNumber(data.cacheCreationTokens),
 		formatNumber(data.cacheReadTokens),
 		formatNumber(totalTokens),
-		formatCurrency(data.totalCost),
 	];
+
+	if (noDisplayCost !== true) {
+		row.push(totalCost);
+	}
 
 	if (lastActivity !== undefined) {
 		row.push(lastActivity);
@@ -534,10 +548,11 @@ export function formatUsageDataRow(
 /**
  * Creates a totals row with yellow highlighting
  * @param totals - Totals data to display
+ * @param noDisplayCost - Whether to omit the cost column
  * @param includeLastActivity - Whether to include an empty last activity column
  * @returns Formatted totals row
  */
-export function formatTotalsRow(totals: UsageData, includeLastActivity = false): (string | number)[] {
+export function formatTotalsRow(totals: UsageData, noDisplayCost?: boolean, includeLastActivity = false): (string | number)[] {
 	const totalTokens = totals.inputTokens + totals.outputTokens + totals.cacheCreationTokens + totals.cacheReadTokens;
 
 	const row: (string | number)[] = [
@@ -548,8 +563,11 @@ export function formatTotalsRow(totals: UsageData, includeLastActivity = false):
 		pc.yellow(formatNumber(totals.cacheCreationTokens)),
 		pc.yellow(formatNumber(totals.cacheReadTokens)),
 		pc.yellow(formatNumber(totalTokens)),
-		pc.yellow(formatCurrency(totals.totalCost)),
 	];
+
+	if (noDisplayCost !== true) {
+		row.push(pc.yellow(formatCurrency(totals.totalCost)));
+	}
 
 	if (includeLastActivity) {
 		row.push(''); // Empty for Last Activity column in totals

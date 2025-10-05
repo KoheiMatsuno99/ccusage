@@ -130,6 +130,7 @@ export const sessionCommand = define({
 				includeLastActivity: true,
 				dateFormatter: (dateStr: string) => formatDateCompact(dateStr, ctx.values.timezone, ctx.values.locale),
 				forceCompact: ctx.values.compact,
+				noDisplayCost: ctx.values.noDisplayCost,
 			};
 			const table = createUsageReportTable(tableConfig);
 
@@ -148,7 +149,7 @@ export const sessionCommand = define({
 					cacheReadTokens: data.cacheReadTokens,
 					totalCost: data.totalCost,
 					modelsUsed: data.modelsUsed,
-				}, data.lastActivity);
+				}, data.lastActivity, ctx.values.noDisplayCost);
 				table.push(row);
 
 				// Add model breakdown rows if flag is set
@@ -159,7 +160,8 @@ export const sessionCommand = define({
 			}
 
 			// Add empty row for visual separation before totals
-			addEmptySeparatorRow(table, 9);
+			const columnCount = ctx.values.noDisplayCost ? 8 : 9;
+			addEmptySeparatorRow(table, columnCount);
 
 			// Add totals
 			const totalsRow = formatTotalsRow({
@@ -168,7 +170,7 @@ export const sessionCommand = define({
 				cacheCreationTokens: totals.cacheCreationTokens,
 				cacheReadTokens: totals.cacheReadTokens,
 				totalCost: totals.totalCost,
-			}, true); // Include Last Activity column
+			}, ctx.values.noDisplayCost, true); // noDisplayCost, includeLastActivity
 			table.push(totalsRow);
 
 			log(table.toString());
